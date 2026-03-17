@@ -5,19 +5,29 @@ export const submitMemory = async (payload) => {
     ? `${API_BASE_URL}/api/messages`
     : "/api/messages";
 
-  const response = await fetch(endpoint, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  try {
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!response.ok) {
-    throw new Error(data.message || "Unable to capture memory right now.");
+    if (!response.ok) {
+      throw new Error(data.message || "Unable to capture memory right now.");
+    }
+
+    return data;
+  } catch (error) {
+    if (error instanceof TypeError) {
+      throw new Error(
+        "Unable to reach the server right now. Please try again in a moment."
+      );
+    }
+
+    throw error;
   }
-
-  return data;
 };

@@ -9,7 +9,7 @@ import Message from "./models/Message.js";
 dotenv.config();
 
 const app = express();
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const CLIENT_URL = process.env.CLIENT_URL || "";
 const RESEND_API_KEY = process.env.RESEND_API_KEY || "";
 const RESEND_FROM =
   process.env.RESEND_FROM || "Galaxy 2026 <onboarding@resend.dev>";
@@ -17,17 +17,40 @@ const NOTIFY_EMAIL = process.env.NOTIFY_EMAIL || "";
 
 const RELATIONSHIP_OPTIONS = new Set(["Branch mate", "Junior", "Other"]);
 const resend = RESEND_API_KEY ? new Resend(RESEND_API_KEY) : null;
-const allowedOrigins = CLIENT_URL.split(",").map((value) => value.trim()).filter(Boolean);
+const allowedOrigins = CLIENT_URL.split(",")
+  .map((value) => value.trim())
+  .filter(Boolean);
+
+const isAllowedOrigin = (origin) => {
+  if (!origin) {
+    return true;
+  }
+
+  if (allowedOrigins.length === 0) {
+    return true;
+  }
+
+  if (allowedOrigins.includes(origin)) {
+    return true;
+  }
+
+  // Allow Vercel preview/production domains for easier deployment.
+  if (origin.endsWith(".vercel.app")) {
+    return true;
+  }
+
+  return false;
+};
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+      if (isAllowedOrigin(origin)) {
         callback(null, true);
         return;
       }
 
-      callback(new Error("Not allowed by CORS"));
+      callback(null, false);
     },
     credentials: true,
   })
